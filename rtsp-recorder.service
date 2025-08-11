@@ -1,0 +1,13 @@
+[Unit]
+Description=RTSP Camera Recorder Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/home/varun/camera_service/recorder.py
+User=your_username
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
