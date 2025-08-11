@@ -10,7 +10,7 @@ import signal
 # --- SCRIPT START ---
 
 # The absolute path to the configuration file
-CONFIG_FILE = "/home/varun/camera_service/config.json"
+CONFIG_FILE = "./config.json"
 
 def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     """Builds and starts a single ffmpeg process for a given camera."""
@@ -29,11 +29,13 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
 
     # Build the ffmpeg command
     command = [
-        "/usr/bin/ffmpeg",
-        "-rtsp_transport", common_options['rtsp_transport'],
+        "ffmpeg",
+        "-rtsp_transport", common_options['rtsp_transport'], # This should already be there
+        "-stimeout", "5000000",   # <--- ADD THIS LINE (Timeout in microseconds)
         "-i", rtsp_url,
-        "-c:v", common_options['codec'],
-        "-b:v", common_options['bitrate'],
+        "-c:v",
+        # "-b:v", common_options['bitrate'],
+        "copy",
         "-map", "0",
         "-f", "segment",
         "-segment_time", common_options['segment_time'],
@@ -50,7 +52,7 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     # stdout=subprocess.DEVNULL and stderr=subprocess.PIPE will keep the main script clean
     # but allow us to capture errors if the process fails immediately.
     try:
-        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return process
     except FileNotFoundError:
         print(f"ERROR for {camera_name}: ffmpeg command not found.")
@@ -79,6 +81,7 @@ def main():
             process = start_ffmpeg_process(key, camera_conf, common_options, base_dir)
             if process:
                 processes[key] = process
+                print(f"Started recording for {key} with PID {process.pid}")
     
     if not processes:
         print("No enabled cameras found in config. Exiting.")

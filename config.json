@@ -1,14 +1,14 @@
 {
   "camera_1": {
     "enabled": true,
-    "username": "vaib_spy",
-    "password": "vaib@315",
-    "ip_address": "YOUR_CAM1_IP_ADDRESS",
-    "rtsp_path": "stream1",
+    "username": "varunsesh",
+    "password": "varunvaib315",
+    "ip_address": "10.178.226.159:1935",
+    "rtsp_path": "",
     "folder_name": "camera_1_videos"
   },
   "camera_2": {
-    "enabled": true,
+    "enabled": false,
     "username": "vaib_spy",
     "password": "vaib@315",
     "ip_address": "YOUR_CAM2_IP_ADDRESS",
@@ -17,11 +17,11 @@
   },
   "common_ffmpeg_options": {
     "rtsp_transport": "tcp",
-    "codec": "h264_v4l2m2m",
+    "codec": "",
     "bitrate": "2M",
     "segment_time": "10"
   },
-  "base_output_dir": "/home/varun/camera_service/recordings",
+  "base_output_dir": "./recordings",
   "upload_dir": "tapo_recordings",
   "log_file": "/home/varun/camera_service/upload_log.txt"
 }
