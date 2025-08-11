@@ -5,7 +5,7 @@ After=network-online.target
 
 [Service]
 ExecStart=/home/varun/camera_service/recorder.py
-User=your_username
+User=varun
 Restart=always
 RestartSec=10s
 

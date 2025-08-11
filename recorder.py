@@ -31,7 +31,7 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     command = [
         "ffmpeg",
         "-rtsp_transport", common_options['rtsp_transport'], # This should already be there
-        "-stimeout", "5000000",   # <--- ADD THIS LINE (Timeout in microseconds)
+        "-timeout", "5000000",
         "-i", rtsp_url,
         "-c:v",
         # "-b:v", common_options['bitrate'],
@@ -44,7 +44,8 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
         "-strftime", "1",
         output_pattern
     ]
-    
+
+        
     print(f"Starting process for {camera_name}...")
     print(f"Command: {' '.join(command)}")
     
@@ -52,7 +53,7 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     # stdout=subprocess.DEVNULL and stderr=subprocess.PIPE will keep the main script clean
     # but allow us to capture errors if the process fails immediately.
     try:
-        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
         return process
     except FileNotFoundError:
         print(f"ERROR for {camera_name}: ffmpeg command not found.")

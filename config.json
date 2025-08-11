@@ -21,7 +21,7 @@
     "bitrate": "2M",
     "segment_time": "10"
   },
-  "base_output_dir": "./recordings",
+  "base_output_dir": "/home/varun/camera_service/recordings",
   "upload_dir": "tapo_recordings",
   "log_file": "/home/varun/camera_service/upload_log.txt"
 }
