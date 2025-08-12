@@ -5,61 +5,79 @@ import subprocess
 import sys
 import os
 import time
-import signal
+import socket
 
 # --- SCRIPT START ---
 
-# The absolute path to the configuration file
-CONFIG_FILE = "./config.json"
+CONFIG_FILE = "/home/varun/camera_service/config.json"
+
+# --- NEW FUNCTION: The Pre-flight Check ---
+def wait_for_camera(camera_name, host, port, timeout=5, wait_interval=30):
+    """
+    Waits until a TCP connection can be made to the camera's IP and port.
+    Returns True if successful, False if it gives up (it currently never gives up).
+    """
+    print(f"[{camera_name}] Performing pre-flight check: waiting for {host}:{port} to be online...")
+    
+    while True:
+        try:
+            # Set a timeout for the connection attempt
+            socket.setdefaulttimeout(timeout)
+            # Try to create a connection
+            with socket.create_connection((host, port)):
+                print(f"[{camera_name}] Success! Camera is online at {host}:{port}.")
+                return True
+        except (socket.error, socket.timeout) as e:
+            print(f"[{camera_name}] Camera not ready at {host}:{port}. Retrying in {wait_interval} seconds... (Error: {e})")
+            time.sleep(wait_interval)
+
 
 def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     """Builds and starts a single ffmpeg process for a given camera."""
     
-    # Build the RTSP URL
+    # --- PRE-FLIGHT CHECK IS CALLED HERE ---
+    # Extract IP and Port for the check
+    ip_parts = camera_config['ip_address'].split(':')
+    host = ip_parts[0]
+    # Default RTSP port is 554 if not specified
+    port = int(ip_parts[1]) if len(ip_parts) > 1 else 554
+    
+    wait_for_camera(camera_name, host, port)
+    # --- END OF PRE-FLIGHT CHECK ---
+    
     rtsp_url = (
         f"rtsp://{camera_config['username']}:{camera_config['password']}@"
         f"{camera_config['ip_address']}/{camera_config['rtsp_path']}"
     )
     
-    # Create the specific output directory for this camera
     output_dir = os.path.join(base_dir, camera_config['folder_name'])
     os.makedirs(output_dir, exist_ok=True)
     
     output_pattern = os.path.join(output_dir, f"{camera_name}-%Y%m%d-%H%M%S.mp4")
 
-    # Build the ffmpeg command
     command = [
-        "ffmpeg",
-        "-rtsp_transport", common_options['rtsp_transport'], # This should already be there
+        "/usr/bin/ffmpeg",
+        "-rtsp_transport", common_options.get('rtsp_transport', 'tcp'),
         "-timeout", "5000000",
         "-i", rtsp_url,
         "-c:v",
-        # "-b:v", common_options['bitrate'],
-        "copy",
+        #"-b:v", common_options.get('bitrate', '2M'),
         "-map", "0",
         "-f", "segment",
-        "-segment_time", common_options['segment_time'],
+        "-segment_time", common_options.get('segment_time', '10'),
         "-segment_format", "mp4",
         "-reset_timestamps", "1",
         "-strftime", "1",
         output_pattern
     ]
-
-        
-    print(f"Starting process for {camera_name}...")
-    print(f"Command: {' '.join(command)}")
     
-    # Start the process in the background.
-    # stdout=subprocess.DEVNULL and stderr=subprocess.PIPE will keep the main script clean
-    # but allow us to capture errors if the process fails immediately.
+    print(f"[{camera_name}] Starting ffmpeg process...")
+    
     try:
-        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         return process
-    except FileNotFoundError:
-        print(f"ERROR for {camera_name}: ffmpeg command not found.")
-        return None
     except Exception as e:
-        print(f"ERROR starting ffmpeg for {camera_name}: {e}")
+        print(f"[{camera_name}] ERROR starting ffmpeg: {e}")
         return None
 
 def main():
@@ -76,41 +94,32 @@ def main():
     
     processes = {}
     
-    # Loop through all items that start with "camera_"
     for key, camera_conf in config.items():
         if key.startswith("camera_") and camera_conf.get("enabled", False):
             process = start_ffmpeg_process(key, camera_conf, common_options, base_dir)
             if process:
                 processes[key] = process
-                print(f"Started recording for {key} with PID {process.pid}")
     
     if not processes:
         print("No enabled cameras found in config. Exiting.")
         sys.exit(0)
         
     print("\nAll recording processes started. This script will now monitor them.")
-    print("Press Ctrl+C to stop all recordings.")
 
-    # This loop keeps the main script alive and checks if any processes have crashed.
     try:
         while True:
             for name, proc in processes.items():
-                # poll() returns the exit code if the process has terminated, otherwise None.
                 if proc.poll() is not None:
                     print(f"\nCRITICAL: Process for {name} has terminated unexpectedly!")
-                    stderr_output = proc.stderr.read().decode()
-                    print(f"FFmpeg error output for {name}:\n{stderr_output}")
-                    # In a more advanced script, you could try to restart it here.
-                    # For now, we exit so systemd can restart the whole script.
+                    if proc.stderr:
+                        stderr_output = proc.stderr.read()
+                        print(f"FFmpeg error output for {name}:\n{stderr_output}")
                     sys.exit(1)
-            time.sleep(10) # Check every 10 seconds
+            time.sleep(10)
     except KeyboardInterrupt:
         print("\nShutdown signal received. Terminating all ffmpeg processes...")
-        for name, proc in processes.items():
-            print(f"Stopping process for {name}...")
-            proc.terminate() # Send SIGTERM
-        
-        # Wait for all processes to terminate
+        for proc in processes.values():
+            proc.terminate()
         for proc in processes.values():
             proc.wait()
         print("All processes stopped. Exiting.")
