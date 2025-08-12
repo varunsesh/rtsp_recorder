@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import subprocess
 from datetime import datetime
@@ -41,7 +42,7 @@ def main():
     source_dir = config.get("base_output_dir")
     log_file = config.get("log_file")
     remote_dest_dir = config.get("upload_dir")
-    remote_name = "gdrive" # Assuming this is constant, or add it to config too.
+    remote_name = config.get("drive") # Assuming this is constant, or add it to config too.
 
     # --- Start logging ---
     log_message(log_file, "--- Upload script started. ---")
