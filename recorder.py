@@ -9,7 +9,7 @@ import socket
 
 # --- SCRIPT START ---
 
-CONFIG_FILE = "/home/varun/camera_service/config.json"
+CONFIG_FILE = "./config.json"
 
 # --- NEW FUNCTION: The Pre-flight Check ---
 def wait_for_camera(camera_name, host, port, timeout=5, wait_interval=30):
@@ -56,11 +56,11 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
     output_pattern = os.path.join(output_dir, f"{camera_name}-%Y%m%d-%H%M%S.mp4")
 
     command = [
-        "/usr/bin/ffmpeg",
+        "ffmpeg",
         "-rtsp_transport", common_options.get('rtsp_transport', 'tcp'),
         "-timeout", "5000000",
         "-i", rtsp_url,
-        "-c:v",
+        "-c:v", "copy",
         #"-b:v", common_options.get('bitrate', '2M'),
         "-map", "0",
         "-f", "segment",
@@ -70,11 +70,11 @@ def start_ffmpeg_process(camera_name, camera_config, common_options, base_dir):
         "-strftime", "1",
         output_pattern
     ]
-    
+    print(f"[{camera_name}] Command: {' '.join(command)}")
     print(f"[{camera_name}] Starting ffmpeg process...")
     
     try:
-        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
         return process
     except Exception as e:
         print(f"[{camera_name}] ERROR starting ffmpeg: {e}")

@@ -3,7 +3,7 @@
     "enabled": true,
     "username": "varunsesh",
     "password": "varunvaib315",
-    "ip_address": "10.178.226.159:1935",
+    "ip_address": "192.168.0.134:1935",
     "rtsp_path": "",
     "folder_name": "camera_1_videos"
   },
@@ -21,7 +21,7 @@
     "bitrate": "2M",
     "segment_time": "10"
   },
-  "base_output_dir": "/home/varun/camera_service/recordings",
+  "base_output_dir": "./recordings",
   "upload_dir": "tapo_recordings",
   "log_file": "/home/varun/camera_service/upload_log.txt"
 }
