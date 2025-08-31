@@ -1,0 +1,12 @@
+[Unit]
+Description=My Camera Config API Server
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/varun/camera_service
+ExecStart=/usr/bin/python3 /home/varun/camera_service/api_server.py
+User=varun
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
