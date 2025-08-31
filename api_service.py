@@ -70,4 +70,12 @@ if __name__ == '__main__':
     if sys.argv[1:] and sys.argv[1] == 'dev':
         CONFIG_FILE = "./config.json"
     # Run on port 5000, accessible from any device on the network (0.0.0.0)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+       # Define the paths to your certificate and key files
+    # It's good practice to use absolute paths
+    cert_file = '/home/varun/camera_service/cert.pem'
+    key_file = '/home/varun/camera_service/key.pem'
+    context = (cert_file, key_file)
+
+    # Run the app with the ssl_context to enable HTTPS
+    # Remove debug=True before final deployment
+    app.run(host='0.0.0.0', port=5000, ssl_context=context, debug=True)
