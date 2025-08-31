@@ -24,5 +24,9 @@
   "base_output_dir": "./recordings",
   "upload_dir": "tapo_recordings",
   "log_file": "/home/varun/camera_service/upload_log.txt",
-  "drive":"gdrive"
+  "drive":"gdrive", 
+   "allowed_users": [
+    "varunsesh@gmail.com",
+    "familycloud098@gmail.com"
+  ]
 }
